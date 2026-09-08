@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="mn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="MessAge — Discord дээрх хяналттай, хувийн зурвасын бот." />
+  <meta name="theme-color" content="#2457e6" />
+  <title>MessAge — Discord bot</title>
+  <style>
+    :root {
+      --ink: #0b1837;
+      --muted: #52617c;
+      --paper: #f3f7ff;
+      --card: #ffffff;
+      --line: #dbe5f6;
+      --blue: #2457e6;
+      --blue-dark: #173ba9;
+      --green: #18864b;
+      --red: #ba3e3e;
+      --shadow: 0 16px 40px rgba(16, 24, 39, .08);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; }
+    .wrap { width: min(1120px, calc(100% - 40px)); margin: 0 auto; }
+    .topbar {
+      position: sticky; top: 0; z-index: 5;
+      background: rgba(243,247,255,.92);
+      border-bottom: 1px solid rgba(219,229,246,.9);
+      backdrop-filter: blur(14px);
+    }
+    .nav {
+      min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 18px;
+    }
+    .brand { display: inline-flex; align-items: center; gap: 11px; text-decoration: none; font-weight: 760; letter-spacing: -.025em; }
+    .mark {
+      width: 37px; height: 37px; display: grid; place-items: center; border-radius: 11px;
+      color: white; background: var(--blue); font-size: 15px; font-weight: 800;
+      box-shadow: 0 5px 12px rgba(88,101,242,.24);
+    }
+    .nav-links { display: flex; align-items: center; gap: 26px; font-size: 14px; color: var(--muted); }
+    .nav-links a { text-decoration: none; }
+    .nav-links a:hover { color: var(--ink); }
+    .button {
+      display: inline-flex; justify-content: center; align-items: center; gap: 9px;
+      border: 0; border-radius: 10px; padding: 11px 16px; cursor: pointer;
+      text-decoration: none; font: inherit; font-size: 14px; font-weight: 700; transition: .2s ease;
+    }
+    .button.primary { color: white; background: var(--blue); }
+    .button.primary:hover { background: var(--blue-dark); transform: translateY(-1px); }
+    .button.ghost { color: var(--ink); background: transparent; border: 1px solid var(--line); }
+    .button.ghost:hover { border-color: #bbc3d0; background: white; }
+    .hero {
+      padding: 86px 0 76px;
+      background:
+        radial-gradient(circle at 78% 18%, rgba(77,132,255,.17), transparent 28%),
+        radial-gradient(circle at 10% 0%, rgba(36,87,230,.09), transparent 30%);
+    }
+    .hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 72px; align-items: center; }
+    .eyebrow { margin: 0 0 18px; color: var(--blue); font-size: 12px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+    h1 { max-width: 680px; margin: 0; font-size: clamp(42px, 6vw, 76px); line-height: .98; letter-spacing: -.07em; }
+    .hero-copy { max-width: 570px; margin: 24px 0 0; color: var(--muted); font-size: 18px; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+    .mini-note { margin-top: 18px; color: #8a93a2; font-size: 12px; }
+    .hero-card {
+      padding: 25px; border: 1px solid var(--line); border-radius: 24px; background: var(--card); box-shadow: var(--shadow);
+      transform: rotate(1.2deg);
+    }
+    .card-head { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding-bottom: 19px; border-bottom: 1px solid var(--line); }
+    .card-title { font-weight: 780; }
+    .pill { display: inline-flex; align-items: center; gap: 7px; padding: 5px 9px; border-radius: 999px; background: #edf8f1; color: var(--green); font-size: 12px; font-weight: 720; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .message { margin-top: 18px; padding: 17px; border-radius: 14px; background: #f5f6fb; }
+    .message small { color: var(--muted); }
+    .message strong { display: block; margin-top: 8px; font-size: 15px; }
+    .message p { margin: 9px 0 0; color: var(--muted); font-size: 13px; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; margin-top: 18px; }
+    .stat { padding: 12px; border: 1px solid var(--line); border-radius: 12px; }
+    .stat b { display: block; font-size: 17px; }
+    .stat span { color: var(--muted); font-size: 11px; }
+    section { padding: 78px 0; }
+    .section-head { display: flex; justify-content: space-between; align-items: end; gap: 30px; margin-bottom: 28px; }
+    h2 { margin: 0; font-size: clamp(28px, 4vw, 43px); line-height: 1.05; letter-spacing: -.05em; }
+    .section-head p { max-width: 440px; margin: 0; color: var(--muted); font-size: 15px; }
+    .soft { background: #eaf1ff; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .feature { padding: 23px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
+    .feature .icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; background: #eef0ff; color: var(--blue); font-weight: 800; }
+    .feature h3 { margin: 18px 0 7px; font-size: 17px; letter-spacing: -.02em; }
+    .feature p { margin: 0; color: var(--muted); font-size: 14px; }
+    .command-layout { display: grid; grid-template-columns: .7fr 1.3fr; gap: 34px; align-items: start; }
+    .command-intro { color: var(--muted); font-size: 15px; }
+    .command-intro code, code { padding: 3px 6px; border-radius: 6px; background: #eef0f4; color: #343d4d; font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .command-list { display: grid; gap: 9px; }
+    .command {
+      display: grid; grid-template-columns: 120px 1fr; gap: 15px; align-items: baseline;
+      padding: 16px 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--card);
+    }
+    .command code { background: #f0f1ff; color: var(--blue-dark); font-weight: 700; }
+    .command span { color: var(--muted); font-size: 14px; }
+    .status-card { display: grid; grid-template-columns: 1fr auto; gap: 25px; align-items: center; padding: 25px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
+    .status-main { display: flex; align-items: center; gap: 12px; }
+    .status-indicator { width: 12px; height: 12px; border-radius: 50%; background: #d5a629; box-shadow: 0 0 0 5px #fff6d9; }
+    .status-indicator.online { background: var(--green); box-shadow: 0 0 0 5px #e3f6eb; }
+    .status-indicator.offline { background: var(--red); box-shadow: 0 0 0 5px #fbe8e8; }
+    .status-title { font-weight: 780; }
+    .status-text { color: var(--muted); font-size: 13px; }
+    .status-meta { margin-top: 14px; color: #8a93a2; font-size: 12px; }
+    .review-layout { display: grid; grid-template-columns: .8fr 1.2fr; gap: 24px; align-items: start; }
+    .review-form-card { padding: 24px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); position: sticky; top: 90px; }
+    .review-form-card p.hint { margin: 0 0 14px; color: var(--muted); font-size: 13px; }
+    .star-input { display: flex; gap: 6px; margin-bottom: 14px; }
+    .star-input button { border: 0; background: none; padding: 0; font-size: 26px; line-height: 1; cursor: pointer; color: #d7deee; transition: color .15s ease; }
+    .star-input button.on { color: #f0a63a; }
+    .review-form-card textarea { width: 100%; min-height: 90px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; font: inherit; font-size: 13px; resize: vertical; color: var(--ink); }
+    .review-form-card .button { width: 100%; margin-top: 12px; }
+    .review-summary { display: flex; align-items: baseline; gap: 10px; margin-bottom: 18px; }
+    .review-summary b { font-size: 30px; letter-spacing: -.03em; }
+    .review-summary .stars { color: #f0a63a; font-size: 15px; }
+    .review-summary span { color: var(--muted); font-size: 13px; }
+    .review-list { display: grid; gap: 12px; }
+    .review-item { padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+    .review-item-head { display: flex; align-items: center; gap: 10px; }
+    .review-item img { width: 30px; height: 30px; border-radius: 50%; background: #dbe5f6; }
+    .review-item .rname { font-weight: 700; font-size: 13px; }
+    .review-item .rdate { color: #8a93a2; font-size: 11px; }
+    .review-item .stars { color: #f0a63a; font-size: 13px; margin: 8px 0 6px; }
+    .review-item p { margin: 0; color: var(--muted); font-size: 13.5px; }
+    #review-empty { color: var(--muted); font-size: 13px; padding: 10px 2px; }
+    @media (max-width: 820px) { .review-layout { grid-template-columns: 1fr; } .review-form-card { position: static; } }
+    .legal-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+    .legal-card { padding: 25px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
+    .legal-card a { color: var(--blue-dark); text-decoration: none; }
+    .legal-card a:hover { text-decoration: underline; }
+    .legal-card h3 { margin: 0 0 14px; font-size: 21px; letter-spacing: -.03em; }
+    .legal-card h4 { margin: 19px 0 4px; font-size: 13px; }
+    .legal-card p, .legal-card li { color: var(--muted); font-size: 13px; }
+    .legal-card p { margin: 0; }
+    .legal-card ul { margin: 7px 0 0; padding-left: 19px; }
+    footer { padding: 35px 0 45px; border-top: 1px solid var(--line); }
+    .footer-row { display: flex; justify-content: space-between; gap: 20px; color: var(--muted); font-size: 13px; }
+    .footer-links { display: flex; gap: 18px; }
+    .footer-links a { text-decoration: none; }
+    .footer-links a:hover { color: var(--ink); }
+    @media (max-width: 820px) {
+      .nav-links { display: none; }
+      .hero { padding: 60px 0; }
+      .hero-grid, .command-layout { grid-template-columns: 1fr; gap: 36px; }
+      .hero-card { max-width: 560px; transform: none; }
+      .feature-grid { grid-template-columns: 1fr; }
+      .section-head { display: block; }
+      .section-head p { margin-top: 12px; }
+    }
+    @media (max-width: 580px) {
+      .wrap { width: min(100% - 28px, 1120px); }
+      .nav { min-height: 64px; }
+      .nav .button { padding: 9px 12px; font-size: 12px; }
+      h1 { font-size: 48px; }
+      .hero-copy { font-size: 16px; }
+      section { padding: 58px 0; }
+      .stats { grid-template-columns: 1fr; }
+      .status-card, .legal-grid { grid-template-columns: 1fr; }
+      .status-card .button { width: 100%; }
+      .command { grid-template-columns: 1fr; gap: 7px; }
+      .footer-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap nav">
+      <a class="brand" href="#top" aria-label="MessAge home">
+        <span class="mark">➤</span><span>MessAge</span>
+      </a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="#features">Онцлог</a>
+        <a href="#commands">Команд</a>
+        <a href="#auth">Account</a>
+        <a href="#reviews">Review</a>
+        <a href="#status">Status</a>
+        <a href="#legal">Дүрэм</a>
+      </nav>
+      <div style="display:flex;gap:8px;align-items:center">
+        <a class="button ghost" href="#auth">Sign in</a>
+        <a class="button primary" href="https://discord.com/oauth2/authorize?client_id=1541874591243444356" target="_blank" rel="noopener">Add to Discord ↗</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <p class="eyebrow">MessAge — Discord app</p>
+          <h1>Зурвас дамжуулахдаа хяналттай бай.</h1>
+          <p class="hero-copy">Elii → MessAge нь Discord сервер дээр хэрэглэгч хоорондын хувийн зурвасыг дамжуулж, хамгаалалт, cooldown, report болон appeal урсгалыг нэг дороос зохицуулна.</p>
+          <div class="hero-actions">
+            <a class="button primary" href="https://discord.com/oauth2/authorize?client_id=1541874591243444356" target="_blank" rel="noopener">Bot нэмэх ↗</a>
+            <a class="button ghost" href="https://discord.gg/elii" target="_blank" rel="noopener">Support server</a>
+          </div>
+          <div class="mini-note">Аль ч Discord серверт ашиглаж болно. Зөвхөн owner хэсгийн командууд тусгай home server-т хязгаарлагдана.</div>
+        </div>
+        <div class="hero-card" aria-label="Bot preview">
+          <div class="card-head">
+            <div class="card-title">📨 Танд шинэ зурвас ирлээ</div>
+            <span class="pill"><span class="dot"></span> Protected</span>
+          </div>
+          <div class="message">
+            <small>Илгээгч · Discord user</small>
+            <strong>Сайн уу, энэ бол MessAge-ээр ирсэн зурвас.</strong>
+            <p>Хэрэглэгч хүсвэл 3 цагийн турш /priv зурвасаас өөрийгөө хамгаалж чадна.</p>
+          </div>
+          <div class="stats">
+            <div class="stat"><b>30s</b><span>DM cooldown</span></div>
+            <div class="stat"><b>50/h</b><span>global limit</span></div>
+            <div class="stat"><b>3h</b><span>protection</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="soft">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Чухал зүйлс нь<br />энгийн хэвээрээ.</h2>
+          <p>Bot-ын гол логик нь SQLite-д хадгалагдаж, restart хийсэн ч protection, cooldown, audit, report зэрэг төлөв алдагдахгүй.</p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature"><div class="icon">↗</div><h3>Controlled DM</h3><p><code>/priv</code> ашиглан сонгосон хэрэглэгчид embed хэлбэрийн хувийн зурвас илгээнэ.</p></article>
+          <article class="feature"><div class="icon">◷</div><h3>Protection first</h3><p>DM доторх товчоор 3 цагийн турш <code>/priv</code> зурвас авахгүй байх боломжтой.</p></article>
+          <article class="feature"><div class="icon">✓</div><h3>Report & appeal</h3><p>Зохисгүй зурвасыг мэдээлж, шийтгэл авсан хэрэглэгч <code>/appeal</code>-аар гомдол гаргана.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="commands">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Командууд</h2>
+          <p>Slash командуудыг Discord-ийн command picker-ээс ашиглана. Administrator болон owner-д зориулсан хэсгүүд тусдаа эрхтэй.</p>
+        </div>
+        <div class="command-layout">
+          <div class="command-intro">
+            <p><strong>Эхлэхэд хэрэгтэй:</strong></p>
+            <p><code>/help</code> командаар bot доторх бүх тусламжийг харна. <code>/usersettings</code>-ээр DM болон read receipt тохиргоогоо өөрчилнө.</p>
+            <p><strong>Prefix:</strong> <code>?protect</code> — 3 цагийн хамгаалалт.</p>
+          </div>
+          <div class="command-list">
+            <div class="command"><code>/priv</code><span>Сонгосон хэрэглэгчид хувийн зурвас илгээх</span></div>
+            <div class="command"><code>/say</code><span>Channel-д зурвас бичих — Administrator</span></div>
+            <div class="command"><code>/profile</code><span>Өөрийн статистик, protection, ban, warning харах</span></div>
+            <div class="command"><code>/stats</code><span>Bot-ын одоогийн ашиглалтын статистик</span></div>
+            <div class="command"><code>/history</code><span>Сүүлийн /priv-ийн түүх — message content хадгалахгүй</span></div>
+            <div class="command"><code>/leaderboard</code><span>Хамгийн олон зурвас илгээсэн хэрэглэгчид</span></div>
+            <div class="command"><code>/myreports</code><span>Өөрийн report-уудын явц</span></div>
+            <div class="command"><code>/appeal</code><span>Идэвхтэй шийтгэл дээр гомдол гаргах</span></div>
+            <div class="command"><code>/myappeals</code><span>Өөрийн гаргасан appeal-уудын явц</span></div>
+            <div class="command"><code>/audit</code><span>Дэлгэрэнгүй log — Administrator</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="auth" class="soft">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Өөрийн account-аар<br />нэвтэр.</h2>
+          <p>MessAge-д тусдаа password хэрэггүй. Discord account-аараа нэвтэрч, зөвхөн шаардлагатай identity мэдээллээ хуваалцана.</p>
+        </div>
+        <div id="auth-card-loggedout" class="status-card">
+          <div>
+            <div class="status-main"><span class="status-indicator online"></span><span class="status-title">Discord OAuth</span></div>
+            <div class="status-text">Sign in болон Sign up нь нэг ижил Discord OAuth урсгалыг ашиглана.</div>
+            <div id="auth-message" class="status-meta">Нэвтрэхийн өмнө backend domain-ийг Discord Developer Portal дээр Redirect URI болгон нэмнэ.</div>
+          </div>
+          <div style="display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end">
+            <button class="button ghost" type="button" onclick="startDiscordAuth('signup')">Sign up with Discord</button>
+            <button class="button primary" type="button" onclick="startDiscordAuth('login')">Sign in with Discord ↗</button>
+          </div>
+        </div>
+        <div id="auth-card-loggedin" class="status-card" style="display:none">
+          <div style="display:flex;align-items:center;gap:14px">
+            <img id="auth-avatar" src="" alt="" style="width:44px;height:44px;border-radius:50%;background:#dbe5f6" />
+            <div>
+              <div class="status-title">Нэвтэрсэн: <span id="auth-username">—</span></div>
+              <div class="status-text">Discord account-аар амжилттай баталгаажлаа.</div>
+            </div>
+          </div>
+          <button class="button ghost" type="button" onclick="signOutDiscord()">Sign out</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="reviews">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Хэрэглэгчдийн<br />review.</h2>
+          <p>Зөвхөн Discord-аар нэвтэрсэн хэрэглэгч review үлдээж болно. Нэг хэрэглэгч нэг review-тэй — дахин илгээхэд өмнөх review-гээ засна.</p>
+        </div>
+        <div class="review-layout">
+          <div class="review-form-card">
+            <div id="review-form-locked">
+              <p class="hint">Review үлдээхийн тулд эхлээд Discord-аараа нэвтэрнэ үү.</p>
+              <a class="button ghost" href="#auth" style="width:100%;justify-content:center">Sign in руу очих</a>
+            </div>
+            <div id="review-form-unlocked" style="display:none">
+              <p class="hint">Таны нэвтэрсэн Discord нэрээр нийтлэгдэнэ.</p>
+              <div id="review-stars" class="star-input">
+                <button type="button" data-v="1">★</button>
+                <button type="button" data-v="2">★</button>
+                <button type="button" data-v="3">★</button>
+                <button type="button" data-v="4">★</button>
+                <button type="button" data-v="5">★</button>
+              </div>
+              <textarea id="review-text" maxlength="500" placeholder="MessAge-ийн талаарх бодлоо бичнэ үү…"></textarea>
+              <button class="button primary" type="button" onclick="submitReview()">Review илгээх</button>
+              <div id="review-form-msg" class="mini-note"></div>
+            </div>
+          </div>
+          <div>
+            <div class="review-summary">
+              <b id="review-avg">—</b>
+              <div>
+                <div id="review-avg-stars" class="stars">☆☆☆☆☆</div>
+                <span id="review-count">Review ачаалж байна…</span>
+              </div>
+            </div>
+            <div id="review-list" class="review-list"></div>
+            <div id="review-empty" style="display:none">Одоогоор review алга. Анхных нь болоорой!</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="status" class="soft">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Live status</h2>
+          <p>Bot-ын hosting status-ийг таны өгсөн endpoint-оос шалгана. Хариу ирэхгүй үед гаднах status хуудсыг нээж шалгаж болно.</p>
+        </div>
+        <div class="status-card">
+          <div>
+            <div class="status-main"><span id="status-dot" class="status-indicator"></span><span id="status-title" class="status-title">Шалгаж байна…</span></div>
+            <div id="status-text" class="status-text">Hosting endpoint-тэй холбогдож байна.</div>
+            <div id="status-meta" class="status-meta">Endpoint: o3nua77ki9.apps.bot-hosting.cloud</div>
+          </div>
+          <a class="button ghost" href="https://o3nua77ki9.apps.bot-hosting.cloud" target="_blank" rel="noopener">Status site ↗</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="legal">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Тодорхой дүрэм.<br />Ил тод privacy.</h2>
+          <p>Terms of Service болон Privacy Policy-г тусдаа, уншихад хялбар хуудсаар бэлдсэн. Үйлчилгээ ашиглахаасаа өмнө товч танилцаарай.</p>
+        </div>
+        <div class="legal-grid">
+          <article class="legal-card">
+            <h3>Terms of Service</h3>
+            <p>MessAge-ийг ашиглахтай холбоотой үйлчилгээний нөхцөл, зөвшөөрөгдөх хэрэглээ, moderation болон хариуцлагын хүрээг уншина.</p>
+            <p style="margin-top:18px"><a class="button ghost" href="messsage-terms.html">Terms унших ↗</a></p>
+          </article>
+          <article class="legal-card">
+            <h3>Privacy Policy</h3>
+            <p>MessAge ямар мэдээлэл хадгалж болох, яагаад ашигладаг, retention болон хэрэглэгчийн хүсэлтийг хэрхэн шийдвэрлэхийг тайлбарлана.</p>
+            <p style="margin-top:18px"><a class="button ghost" href="messsage-privacy.html">Privacy унших ↗</a></p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-row">
+      <span>© 2026 MessAge. Built for Discord.</span>
+      <div class="footer-links">
+        <a href="messsage-terms.html">Terms</a><a href="messsage-privacy.html">Privacy</a><a href="mailto:messagesupportteam@gmail.com">Email</a><a href="https://discord.gg/elii" target="_blank" rel="noopener">Support</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /*
+      Discord OAuth setup — GitHub Pages ("m3ssag3.github.io") нь ЗӨВХӨН static файл
+      үйлчилдэг тул client_secret-ийг шаарддаг token exchange-ийг энд хийж БОЛОХГҮЙ.
+      Тиймээс callback нь GitHub Pages руу биш, харин таны bot аль хэдийн Express
+      сервер ажиллуулж байгаа BACKEND_ORIGIN руу очно (жишээ нь bot-hosting.cloud host).
+      1) Discord Developer Portal → OAuth2 → Redirects дээр яг BACKEND_ORIGIN + "/auth/discord/callback"-г нэмнэ.
+      2) Backend дээр DISCORD_CLIENT_SECRET, SESSION_SECRET-ийг зөвхөн environment variable-аар хадгална — эндхий кодод хэзээ ч бичихгүй.
+      3) Backend token-оо солиод, хэрэглэгчийг эргүүлж GitHub Pages рүү #session=<JWT> хэлбэрээр буцаана (доорх handleAuthRedirect харна уу).
+      Бэлэн жишээ Express кодыг chat дотор өгсөн.
+    */
+    const DISCORD_CLIENT_ID = "1541874591243444356";
+    const BACKEND_ORIGIN = "https://o3nua77ki9.apps.bot-hosting.cloud"; // ← өөрийн ажиллаж буй backend host
+    const DISCORD_REDIRECT_URI = BACKEND_ORIGIN + "/auth/discord/callback";
+    const SESSION_KEY = "messageSession";
+
+    function startDiscordAuth(mode) {
+      const authMessage = document.getElementById("auth-message");
+      if (window.location.protocol === "file:") {
+        authMessage.textContent = "Энэ file preview дээр OAuth ажиллахгүй. Website-ээ github.io дээр байршуулсны дараа туршина уу.";
+        return;
+      }
+      const params = new URLSearchParams({
+        client_id: DISCORD_CLIENT_ID,
+        response_type: "code",
+        redirect_uri: DISCORD_REDIRECT_URI,
+        scope: "identify email",
+        state: mode
+      });
+      window.location.href = "https://discord.com/oauth2/authorize?" + params.toString();
+    }
+
+    function signOutDiscord() {
+      localStorage.removeItem(SESSION_KEY);
+      renderAuthState(null);
+    }
+
+    function renderAuthState(user) {
+      const loggedOut = document.getElementById("auth-card-loggedout");
+      const loggedIn = document.getElementById("auth-card-loggedin");
+      const reviewLocked = document.getElementById("review-form-locked");
+      const reviewUnlocked = document.getElementById("review-form-unlocked");
+      if (user) {
+        document.getElementById("auth-username").textContent = user.username;
+        document.getElementById("auth-avatar").src = user.avatarUrl || "";
+        loggedOut.style.display = "none";
+        loggedIn.style.display = "grid";
+        reviewLocked.style.display = "none";
+        reviewUnlocked.style.display = "block";
+      } else {
+        loggedOut.style.display = "grid";
+        loggedIn.style.display = "none";
+        reviewLocked.style.display = "block";
+        reviewUnlocked.style.display = "none";
+      }
+    }
+
+    // --- Reviews ---
+    let selectedRating = 0;
+    document.querySelectorAll("#review-stars button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        selectedRating = Number(btn.dataset.v);
+        document.querySelectorAll("#review-stars button").forEach(b => {
+          b.classList.toggle("on", Number(b.dataset.v) <= selectedRating);
+        });
+      });
+    });
+
+    function starString(n) {
+      const rounded = Math.round(n);
+      return "★★★★★☆☆☆☆☆".slice(5 - rounded, 10 - rounded);
+    }
+
+    async function loadReviews() {
+      try {
+        const saved0 = localStorage.getItem(SESSION_KEY);
+        const res = await fetch(BACKEND_ORIGIN + "/api/reviews", {
+          headers: saved0 ? { Authorization: "Bearer " + saved0 } : {}
+        });
+        const data = await res.json();
+        const list = document.getElementById("review-list");
+        const empty = document.getElementById("review-empty");
+        list.innerHTML = "";
+        if (!data.reviews.length) {
+          empty.style.display = "block";
+        } else {
+          empty.style.display = "none";
+          data.reviews.forEach(r => {
+            const el = document.createElement("div");
+            el.className = "review-item";
+            el.innerHTML = `
+              <div class="review-item-head">
+                <img src="${r.avatarUrl || ""}" alt="" />
+                <div>
+                  <div class="rname">${escapeHtml(r.username)}</div>
+                  <div class="rdate">${new Date(r.createdAt).toLocaleDateString("mn-MN")}</div>
+                </div>
+              </div>
+              <div class="stars">${starString(r.rating)}</div>
+              <p>${escapeHtml(r.body)}</p>`;
+            list.appendChild(el);
+          });
+        }
+        document.getElementById("review-avg").textContent = data.reviews.length ? data.average.toFixed(1) : "—";
+        document.getElementById("review-avg-stars").textContent = starString(data.average || 0);
+        document.getElementById("review-count").textContent = data.reviews.length + " review";
+
+        const saved = localStorage.getItem(SESSION_KEY);
+        if (saved) {
+          const mine = data.reviews.find(r => r.isMine);
+          if (mine) {
+            selectedRating = mine.rating;
+            document.querySelectorAll("#review-stars button").forEach(b => b.classList.toggle("on", Number(b.dataset.v) <= mine.rating));
+            document.getElementById("review-text").value = mine.body;
+          }
+        }
+      } catch (e) {
+        document.getElementById("review-count").textContent = "Review ачаалж чадсангүй";
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    async function submitReview() {
+      const msg = document.getElementById("review-form-msg");
+      const body = document.getElementById("review-text").value.trim();
+      const token = localStorage.getItem(SESSION_KEY);
+      if (!token) { msg.textContent = "Эхлээд нэвтэрнэ үү."; return; }
+      if (!selectedRating) { msg.textContent = "Одоор үнэлгээ өгнө үү."; return; }
+      if (!body) { msg.textContent = "Review-ийн текстээ бичнэ үү."; return; }
+      msg.textContent = "Илгээж байна…";
+      try {
+        const res = await fetch(BACKEND_ORIGIN + "/api/reviews", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify({ rating: selectedRating, body })
+        });
+        if (!res.ok) throw new Error("failed");
+        msg.textContent = "Баярлалаа! Review хадгалагдлаа.";
+        loadReviews();
+      } catch (e) {
+        msg.textContent = "Илгээхэд алдаа гарлаа, дахин оролдоно уу.";
+      }
+    }
+    loadReviews();
+
+    async function fetchProfile(token) {
+      const res = await fetch(BACKEND_ORIGIN + "/api/me", {
+        headers: { Authorization: "Bearer " + token }
+      });
+      if (!res.ok) throw new Error("session invalid");
+      return res.json();
+    }
+
+    async function handleAuthRedirect() {
+      // Backend-ээс #session=<JWT>&mode=login хэлбэрээр буцаж ирнэ
+      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const token = hash.get("session");
+      if (token) {
+        localStorage.setItem(SESSION_KEY, token);
+        history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
+      const saved = localStorage.getItem(SESSION_KEY);
+      if (!saved) { renderAuthState(null); return; }
+      try {
+        const user = await fetchProfile(saved);
+        renderAuthState(user);
+      } catch (e) {
+        localStorage.removeItem(SESSION_KEY);
+        renderAuthState(null);
+      }
+    }
+    handleAuthRedirect();
+
+    const endpoint = "https://o3nua77ki9.apps.bot-hosting.cloud";
+    const dot = document.getElementById("status-dot");
+    const title = document.getElementById("status-title");
+    const text = document.getElementById("status-text");
+    const meta = document.getElementById("status-meta");
+
+    async function checkStatus() {
+      const started = performance.now();
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 8000);
+        const response = await fetch(endpoint, { method: "GET", cache: "no-store", signal: controller.signal });
+        clearTimeout(timer);
+        if (response.ok) {
+          dot.className = "status-indicator online";
+          title.textContent = "Online";
+          text.textContent = "Hosting endpoint хариу өгч байна.";
+        } else {
+          dot.className = "status-indicator offline";
+          title.textContent = "Түр unavailable";
+          text.textContent = "Endpoint хариу өгсөн ч HTTP " + response.status + " төлөвтэй байна.";
+        }
+        meta.textContent = "Шалгасан: " + new Date().toLocaleTimeString("mn-MN") + " · " + Math.round(performance.now() - started) + "ms";
+      } catch (error) {
+        dot.className = "status-indicator offline";
+        title.textContent = "Offline эсвэл шалгах боломжгүй";
+        text.textContent = "Hosting endpoint одоогоор хариу өгөөгүй байна. Status site-ийг шууд нээж шалгана уу.";
+        meta.textContent = "Шалгасан: " + new Date().toLocaleTimeString("mn-MN") + " · " + endpoint;
+      }
+    }
+    checkStatus();
+    setInterval(checkStatus, 60000);
+  </script>
+</body>
+</html>
